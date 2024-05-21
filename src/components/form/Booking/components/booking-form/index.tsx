@@ -1,68 +1,19 @@
 "use client";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { zodResolver } from "@hookform/resolvers/zod";
 
-import { BookingData } from "@/components/BookingCalendar/models/types";
 import { AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useBookingFormStore } from "@/lib/store/useBookingStore";
-import { Weeks } from "@/models/types";
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { DAYS_OF_WEEK, DEFAULT_VALUES, DURATIONS } from "./models/constant";
-import settingsSchema from "./models/schemat";
+import useBookingFormState from "../usecases/useBookingFormState";
+import { DAYS_OF_WEEK, DURATIONS } from "./models/constant";
 import { calculateEndTime, getFilteredTimeOptions } from "./utils";
 
 function BookingFormFields() {
-  const { data, updateData } = useBookingFormStore();
-  const form = useForm({
-    resolver: zodResolver(settingsSchema),
-    defaultValues: DEFAULT_VALUES,
-  });
-
-  const [slotsAdded, setSlotsAdded] = useState(DEFAULT_VALUES.slotsPerTime);
-
-  const watchDuration = useWatch({ control: form.control, name: "duration" });
-
-  const watchslotsPerTime = useWatch({ control: form.control, name: "slotsPerTime" });
-
-  const onSubmit = (data: BookingData) => {
-    updateData(data);
-  };
-
-  const handleStartTimeChange = (day: Weeks, index: number, value: string) => {
-    form.setValue(`dailySettings.${day}.timeSlots.${index}.startTime`, value);
-    const endTime = calculateEndTime(value, watchDuration);
-    form.setValue(`dailySettings.${day}.timeSlots.${index}.endTime`, endTime);
-    const timeSlots = form.getValues(`dailySettings.${day}.timeSlots`);
-    if (index < timeSlots.length - 1) {
-      form.setValue(`dailySettings.${day}.timeSlots.${index + 1}.startTime`, endTime);
-      form.setValue(`dailySettings.${day}.timeSlots.${index + 1}.endTime`, calculateEndTime(endTime, watchDuration));
-    }
-  };
-
-  const handleAddSlot = (day: Weeks) => {
-    const slots = form.getValues(`dailySettings.${day}.timeSlots`);
-    if (slots.length < watchslotsPerTime) {
-      const newSlot = { startTime: "07:00", endTime: calculateEndTime("07:00", watchDuration) };
-      const num = `dailySettings.${day}.timeSlots[${slots.length}]`;
-      form.setValue(num as any, newSlot);
-      setSlotsAdded(slotsAdded + 1);
-    }
-  };
-
-  const handleDeleteSlot = (day: Weeks, index: number) => {
-    const newTimeSlots = form.getValues(`dailySettings.${day}.timeSlots`).filter((_, i) => i !== index);
-    form.setValue(`dailySettings.${day}.timeSlots`, newTimeSlots);
-    if (newTimeSlots.length === 0) {
-      form.setValue(`dailySettings.${day}.enabled`, false);
-    }
-    setSlotsAdded(Math.max(slotsAdded - 1, 0));
-  };
+  const { form, onSubmit, handleAddSlot, handleDeleteSlot, handleStartTimeChange, watchDuration } =
+    useBookingFormState();
 
   return (
     <Form {...form}>

@@ -14,7 +14,7 @@ const timeOptions = generateTimeOptions();
 export const calculateEndTime = (startTime: string, duration: number) => {
   const [hours, minutes] = startTime.split(":").map(Number);
   const startDate = new Date(0, 0, 0, hours, minutes);
-  const endDate = new Date(startDate.getTime() + duration * 60000); // duration in minutes
+  const endDate = new Date(startDate.getTime() + duration * 60000);
   return `${String(endDate.getHours()).padStart(2, "0")}:${String(endDate.getMinutes()).padStart(2, "0")}`;
 };
 
